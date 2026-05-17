@@ -27,34 +27,10 @@ from tensorflow.keras.utils import (
 )
 
 # =========================================================
-# DagsHub MLflow Authentication
+# MLflow Configuration
 # =========================================================
 
-dagshub_token = os.getenv("DAGSHUB_TOKEN")
-
-if dagshub_token:
-
-    os.environ["MLFLOW_TRACKING_USERNAME"] = "arif76440"
-
-    os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
-
-    mlflow.set_tracking_uri(
-        "https://dagshub.com/arif76440/MLFlow-Image-Classification.mlflow"
-    )
-
-    print("[INFO] DagsHub tracking enabled")
-
-else:
-
-    print("[WARNING] DAGSHUB_TOKEN not found")
-
-mlflow.set_tracking_uri(
-    "https://dagshub.com/arif76440/MLFlow-Image-Classification.mlflow"
-)
-
-# =========================================================
-# MLflow Experiment
-# =========================================================
+print("[INFO] Using local MLflow tracking")
 
 mlflow.set_experiment(
     "Intel_Image_Classification"
@@ -282,7 +258,7 @@ with mlflow.start_run():
     )
 
     # =====================================================
-    # Training History Visualization
+    # Save Training History Plot
     # =====================================================
 
     plt.figure(figsize=(10, 5))
@@ -296,7 +272,7 @@ with mlflow.start_run():
     )
 
     plt.title(
-        "Model Accuracy"
+        "Training and Validation Accuracy"
     )
 
     plt.xlabel(
@@ -308,8 +284,8 @@ with mlflow.start_run():
     )
 
     plt.legend([
-        "Train",
-        "Validation"
+        "Train Accuracy",
+        "Validation Accuracy"
     ])
 
     plt.savefig(
@@ -325,6 +301,8 @@ with mlflow.start_run():
     # =====================================================
     # Prediction
     # =====================================================
+
+    print("\n[INFO] Generating predictions...")
 
     y_true = np.concatenate(
         [y for x, y in test_dataset],
@@ -343,6 +321,8 @@ with mlflow.start_run():
     # =====================================================
     # Confusion Matrix
     # =====================================================
+
+    print("\n[INFO] Creating confusion matrix...")
 
     cm = confusion_matrix(
         y_true,
@@ -374,6 +354,8 @@ with mlflow.start_run():
     # Classification Report
     # =====================================================
 
+    print("\n[INFO] Saving classification report...")
+
     report = classification_report(
         y_true,
         y_pred,
@@ -392,8 +374,10 @@ with mlflow.start_run():
     )
 
     # =====================================================
-    # Model Summary
+    # Save Model Summary
     # =====================================================
+
+    print("\n[INFO] Saving model summary...")
 
     with open(
         "artifacts/model_summary.txt",
@@ -409,6 +393,23 @@ with mlflow.start_run():
         "artifacts/model_summary.txt"
     )
 
-    print(
-        "\n[INFO] Training completed successfully!"
-    )
+    # =====================================================
+    # Final Output
+    # =====================================================
+
+    print("\n======================================")
+    print("TRAINING COMPLETED SUCCESSFULLY")
+    print("======================================")
+
+    print(f"Test Accuracy : {test_accuracy:.4f}")
+    print(f"Test Loss     : {test_loss:.4f}")
+
+    print("\nArtifacts saved in:")
+    print("artifacts/")
+
+    print("\nGenerated files:")
+    print("- cnn_model.keras")
+    print("- training_history.png")
+    print("- confusion_matrix.png")
+    print("- classification_report.txt")
+    print("- model_summary.txt")

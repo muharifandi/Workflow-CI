@@ -10,7 +10,6 @@ dependencies:
   - pip:
       - tensorflow
       - mlflow
-      - dagshub
       - numpy
       - matplotlib
       - scikit-learn
