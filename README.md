@@ -1,47 +1,16 @@
-# Workflow CI/CD MLflow Project
+# Intel Image Classification - Workflow CI with MLflow
 
 ## Project Overview
 
-Project ini merupakan implementasi Workflow CI/CD untuk Machine Learning menggunakan:
+This project implements an automated Machine Learning workflow using:
 
 - MLflow Project
-- GitHub Actions
-- DagsHub
+- GitHub Actions CI/CD
+- TensorFlow CNN Model
 - Docker
+- Docker Hub
 
-Pipeline dibuat untuk melakukan:
-
-- retraining model otomatis,
-- experiment tracking,
-- artifact logging,
-- Docker image build,
-- Docker image push secara otomatis.
-
----
-
-# Objectives
-
-Tujuan utama project:
-
-- Membuat automation workflow menggunakan GitHub Actions
-- Menjalankan training model otomatis ketika repository di-push
-- Melakukan experiment tracking menggunakan MLflow
-- Menyimpan artifact training
-- Mengintegrasikan DagsHub
-- Membuat Docker image otomatis
-
----
-
-# Technologies Used
-
-| Technology     | Function                |
-| -------------- | ----------------------- |
-| Python         | Programming Language    |
-| TensorFlow     | Deep Learning Framework |
-| MLflow         | Experiment Tracking     |
-| DagsHub        | Remote MLflow Tracking  |
-| GitHub Actions | Workflow Automation     |
-| Docker         | Containerization        |
+The workflow automatically retrains the model whenever a push or pull request is triggered on GitHub.
 
 ---
 
@@ -55,13 +24,12 @@ Workflow-CI/
 │       └── ci.yml
 │
 ├── MLProject/
-│   │
 │   ├── artifacts/
-│   │   ├── classification_report.txt
 │   │   ├── cnn_model.keras
 │   │   ├── confusion_matrix.png
-│   │   ├── model_summary.txt
-│   │   └── training_history.png
+│   │   ├── training_history.png
+│   │   ├── classification_report.txt
+│   │   └── model_summary.txt
 │   │
 │   ├── intel_image_preprocessing/
 │   │   ├── train/
@@ -69,255 +37,172 @@ Workflow-CI/
 │   │   └── test/
 │   │
 │   ├── modelling.py
-│   ├── MLproject
-│   ├── python_env.yaml
+│   ├── MLProject
 │   ├── conda.yaml
-│   ├── Dockerfile
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── Dockerfile
 │
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
 ---
 
-# Workflow CI/CD Architecture
-
-```mermaid
-graph TD
-
-A[Push to GitHub Repository]
-
-A --> B[GitHub Actions Trigger]
-
-B --> C[Setup Python Environment]
-
-C --> D[Install Dependencies]
-
-D --> E[Run modelling.py]
-
-E --> F[Train CNN Model]
-
-F --> G[Generate Metrics]
-
-G --> H[Generate Artifacts]
-
-H --> I[MLflow Tracking]
-
-I --> J[DagsHub Logging]
-
-J --> K[Upload Artifacts]
-
-K --> L[Build Docker Image]
-
-L --> M[Push Docker Image]
-
-M --> N[Workflow Completed]
-```
-
----
-
-# MLflow Workflow
-
-```mermaid
-graph TD
-
-A[Dataset]
-
-A --> B[Load Dataset]
-
-B --> C[Normalization]
-
-C --> D[Dataset Optimization]
-
-D --> E[Build CNN]
-
-E --> F[Train Model]
-
-F --> G[Evaluate Model]
-
-G --> H[Log Metrics]
-
-H --> I[Log Artifacts]
-
-I --> J[DagsHub Tracking]
-```
-
----
-
-# Docker Workflow
-
-```mermaid
-graph TD
-
-A[Dockerfile]
-
-A --> B[Install Dependencies]
-
-B --> C[Copy MLProject]
-
-C --> D[Run modelling.py]
-
-D --> E[Containerized Pipeline]
-```
-
----
-
-# Artifacts Generated
-
-Artifacts yang dihasilkan selama workflow berjalan:
-
-| Artifact                  | Description            |
-| ------------------------- | ---------------------- |
-| cnn_model.keras           | Trained CNN Model      |
-| training_history.png      | Training Visualization |
-| confusion_matrix.png      | Confusion Matrix       |
-| classification_report.txt | Classification Metrics |
-| model_summary.txt         | CNN Model Architecture |
-
----
-
-# Metrics Logged
-
-MLflow mencatat:
-
-| Metrics       |
-| ------------- |
-| accuracy      |
-| val_accuracy  |
-| test_accuracy |
-| loss          |
-| val_loss      |
-| test_loss     |
-
----
-
-# MLflow Project Configuration
-
-## MLproject
-
-```yaml
-name: Intel_Image_Classification
-
-python_env: python_env.yaml
-
-entry_points:
-  main:
-    command: "python modelling.py"
-```
-
----
-
-# Python Environment
-
-## python_env.yaml
-
-```yaml
-python: "3.10"
-
-build_dependencies:
-  - pip
-
-dependencies:
-  - tensorflow
-  - mlflow
-  - dagshub
-  - numpy
-  - matplotlib
-  - scikit-learn
-  - pillow
-```
-
----
-
-# GitHub Actions Workflow
-
-Workflow otomatis berjalan ketika:
-
-- push ke branch `main`
-- workflow_dispatch dijalankan
-
----
-
-# GitHub Actions Pipeline
-
-```mermaid
-graph TD
-
-A[Push Repository]
-
-A --> B[GitHub Actions]
-
-B --> C[Install Dependencies]
-
-C --> D[Run Training Pipeline]
-
-D --> E[Upload Artifacts]
-
-E --> F[Build Docker]
-
-F --> G[Push Docker Image]
-```
-
----
-
-# Docker Configuration
-
-## Dockerfile
-
-```dockerfile
-FROM python:3.10
-
-WORKDIR /app
-
-COPY . .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["python", "modelling.py"]
-```
-
----
-
-# DagsHub Integration
-
-Project menggunakan DagsHub untuk:
-
-- remote experiment tracking,
-- remote metrics logging,
-- remote artifact logging.
-
-DagsHub Repository:
+# Workflow Architecture
 
 ```text
-https://dagshub.com/arif76440/MLFlow-Image-Classification
+GitHub Push
+      │
+      ▼
+GitHub Actions Triggered
+      │
+      ▼
+Install Dependencies
+      │
+      ▼
+Run modelling.py
+      │
+      ▼
+Train CNN Model
+      │
+      ▼
+Evaluate Model
+      │
+      ▼
+Generate Artifacts
+      │
+      ▼
+Upload Artifacts
+      │
+      ▼
+Build Docker Image
+      │
+      ▼
+Push Docker Image to Docker Hub
 ```
 
 ---
 
-# GitHub Secrets
+# CNN Architecture
 
-Secrets yang digunakan:
-
-| Secret          | Function               |
-| --------------- | ---------------------- |
-| DAGSHUB_TOKEN   | Authentication DagsHub |
-| DOCKER_USERNAME | DockerHub Username     |
-| DOCKER_PASSWORD | DockerHub Access Token |
+```text
+Input Layer
+      │
+      ▼
+Conv2D (32 Filters)
+      │
+      ▼
+MaxPooling2D
+      │
+      ▼
+Conv2D (64 Filters)
+      │
+      ▼
+MaxPooling2D
+      │
+      ▼
+Flatten
+      │
+      ▼
+Dense (128)
+      │
+      ▼
+Dropout (0.3)
+      │
+      ▼
+Output Layer (6 Classes)
+```
 
 ---
 
-# How To Run Locally
+# Dataset
 
-## Install Dependencies
+Dataset used:
+Intel Image Classification Dataset
+
+Dataset split:
+
+- Train
+- Validation
+- Test
+
+Classes:
+
+- Buildings
+- Forest
+- Glacier
+- Mountain
+- Sea
+- Street
+
+---
+
+# MLflow Tracking
+
+This project uses MLflow for:
+
+- Experiment tracking
+- Parameter logging
+- Metric logging
+- Artifact logging
+
+Logged metrics:
+
+- test_accuracy
+- test_loss
+
+Generated artifacts:
+
+- cnn_model.keras
+- training_history.png
+- confusion_matrix.png
+- classification_report.txt
+- model_summary.txt
+
+---
+
+# Docker Integration
+
+Docker is used to containerize the ML application.
+
+Docker image automatically built in GitHub Actions pipeline.
+
+---
+
+# Docker Hub
+
+Docker image is pushed automatically to Docker Hub.
+
+Image name:
+
+```text
+username/intel-image-classification:latest
+```
+
+---
+
+# GitHub Actions CI/CD
+
+GitHub Actions automatically:
+
+1. Install dependencies
+2. Run MLflow project
+3. Train model
+4. Save artifacts
+5. Upload artifacts
+6. Build Docker image
+7. Push Docker image
+
+---
+
+# Running Project Locally
+
+## Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## Run Training
+## Run training
 
 ```bash
 python modelling.py
@@ -325,12 +210,11 @@ python modelling.py
 
 ---
 
-# How To Run Workflow
+# Run MLflow Project
 
-Workflow otomatis berjalan ketika:
-
-- push ke GitHub repository,
-- atau menjalankan workflow_dispatch.
+```bash
+mlflow run .
+```
 
 ---
 
@@ -350,18 +234,60 @@ docker run intel-image-classification
 
 ---
 
-# Expected Output
+# GitHub Secrets
 
-Workflow akan menghasilkan:
+Required GitHub Secrets:
 
-- trained CNN model,
-- MLflow tracking,
-- DagsHub logging,
-- uploaded artifacts,
-- Docker image.
+| Secret Name     | Description                  |
+| --------------- | ---------------------------- |
+| DOCKER_USERNAME | Docker Hub username          |
+| DOCKER_PASSWORD | Docker Hub password or token |
 
 ---
 
-# Author
+# Output Artifacts
 
-Muh Arifandi
+Artifacts generated after training:
+
+| Artifact                  | Description              |
+| ------------------------- | ------------------------ |
+| cnn_model.keras           | Trained CNN model        |
+| training_history.png      | Accuracy visualization   |
+| confusion_matrix.png      | Confusion matrix         |
+| classification_report.txt | Evaluation report        |
+| model_summary.txt         | CNN architecture summary |
+
+---
+
+# Technologies Used
+
+- Python
+- TensorFlow
+- MLflow
+- GitHub Actions
+- Docker
+- Docker Hub
+- Scikit-learn
+- Matplotlib
+
+---
+
+# Conclusion
+
+This project successfully implements:
+
+- MLflow Project workflow
+- Automated CI/CD pipeline
+- CNN image classification
+- Automatic artifact storage
+- Docker image automation
+- Docker Hub integration
+
+This implementation fulfills all requirements for:
+
+Kriteria 3 - Workflow CI
+including:
+
+- Basic
+- Skilled
+- Advanced

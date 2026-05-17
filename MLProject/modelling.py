@@ -27,6 +27,12 @@ from tensorflow.keras.utils import (
 )
 
 # =========================================================
+# Disable GPU
+# =========================================================
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+# =========================================================
 # MLflow Configuration
 # =========================================================
 
@@ -36,6 +42,7 @@ mlflow.set_experiment(
     "Intel_Image_Classification"
 )
 
+# Automatic logging
 mlflow.tensorflow.autolog()
 
 # =========================================================
@@ -51,10 +58,21 @@ BATCH_SIZE = 32
 EPOCHS = 5
 
 # =========================================================
+# Create Artifact Directory
+# =========================================================
+
+os.makedirs(
+    "artifacts",
+    exist_ok=True
+)
+
+# =========================================================
 # Load Dataset
 # =========================================================
 
-print("\n[INFO] Loading dataset...")
+print("\n======================================")
+print("LOADING DATASET")
+print("======================================")
 
 train_dataset = image_dataset_from_directory(
     f"{DATASET_DIR}/train",
@@ -77,12 +95,15 @@ test_dataset = image_dataset_from_directory(
 
 class_names = train_dataset.class_names
 
+print("\nClass Names:")
+print(class_names)
+
 # =========================================================
 # Normalize Dataset
 # =========================================================
 
 normalization_layer = tf.keras.layers.Rescaling(
-    1./255
+    1.0 / 255
 )
 
 train_dataset = train_dataset.map(
@@ -128,60 +149,79 @@ test_dataset = test_dataset.prefetch(
 # Build CNN Model
 # =========================================================
 
-print("\n[INFO] Building CNN model...")
+print("\n======================================")
+print("BUILDING CNN MODEL")
+print("======================================")
 
 model = Sequential([
 
     Input(shape=(128, 128, 3)),
 
     Conv2D(
-        32,
-        (3, 3),
+        filters=32,
+        kernel_size=(3, 3),
         activation="relu"
     ),
 
-    MaxPooling2D(2, 2),
+    MaxPooling2D(
+        pool_size=(2, 2)
+    ),
 
     Conv2D(
-        64,
-        (3, 3),
+        filters=64,
+        kernel_size=(3, 3),
         activation="relu"
     ),
 
-    MaxPooling2D(2, 2),
+    MaxPooling2D(
+        pool_size=(2, 2)
+    ),
 
     Flatten(),
 
     Dense(
-        128,
+        units=128,
         activation="relu"
     ),
 
-    Dropout(0.3),
+    Dropout(
+        rate=0.3
+    ),
 
     Dense(
-        6,
+        units=6,
         activation="softmax"
     )
 ])
 
 # =========================================================
+# Save Model Summary
+# =========================================================
+
+model.summary()
+
+with open(
+    "artifacts/model_summary.txt",
+    "w"
+) as f:
+
+    model.summary(
+        print_fn=lambda x:
+        f.write(x + "\n")
+    )
+
+# =========================================================
 # Compile Model
 # =========================================================
+
+print("\n======================================")
+print("COMPILING MODEL")
+print("======================================")
 
 model.compile(
     optimizer="adam",
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"]
-)
-
-# =========================================================
-# Create Artifact Directory
-# =========================================================
-
-os.makedirs(
-    "artifacts",
-    exist_ok=True
 )
 
 # =========================================================
@@ -191,10 +231,12 @@ os.makedirs(
 with mlflow.start_run():
 
     # =====================================================
-    # Training
+    # Training Model
     # =====================================================
 
-    print("\n[INFO] Training model...")
+    print("\n======================================")
+    print("TRAINING MODEL")
+    print("======================================")
 
     history = model.fit(
         train_dataset,
@@ -203,51 +245,41 @@ with mlflow.start_run():
     )
 
     # =====================================================
-    # Evaluation
+    # Evaluate Model
     # =====================================================
 
-    print("\n[INFO] Evaluating model...")
+    print("\n======================================")
+    print("EVALUATING MODEL")
+    print("======================================")
 
     test_loss, test_accuracy = model.evaluate(
         test_dataset
     )
 
-    # =====================================================
-    # Log Parameters
-    # =====================================================
-
-    mlflow.log_param(
-        "img_size",
-        IMG_SIZE
-    )
-
-    mlflow.log_param(
-        "batch_size",
-        BATCH_SIZE
-    )
-
-    mlflow.log_param(
-        "epochs",
-        EPOCHS
-    )
+    print(f"\nTest Accuracy : {test_accuracy:.4f}")
+    print(f"Test Loss     : {test_loss:.4f}")
 
     # =====================================================
-    # Log Metrics
+    # Additional Metrics
     # =====================================================
 
     mlflow.log_metric(
-        "test_accuracy",
+        "final_test_accuracy",
         test_accuracy
     )
 
     mlflow.log_metric(
-        "test_loss",
+        "final_test_loss",
         test_loss
     )
 
     # =====================================================
     # Save Model
     # =====================================================
+
+    print("\n======================================")
+    print("SAVING MODEL")
+    print("======================================")
 
     model.save(
         "artifacts/cnn_model.keras"
@@ -258,8 +290,12 @@ with mlflow.start_run():
     )
 
     # =====================================================
-    # Save Training History Plot
+    # Training Visualization
     # =====================================================
+
+    print("\n======================================")
+    print("CREATING TRAINING VISUALIZATION")
+    print("======================================")
 
     plt.figure(figsize=(10, 5))
 
@@ -284,7 +320,7 @@ with mlflow.start_run():
     )
 
     plt.legend([
-        "Train Accuracy",
+        "Training Accuracy",
         "Validation Accuracy"
     ])
 
@@ -302,7 +338,9 @@ with mlflow.start_run():
     # Prediction
     # =====================================================
 
-    print("\n[INFO] Generating predictions...")
+    print("\n======================================")
+    print("GENERATING PREDICTIONS")
+    print("======================================")
 
     y_true = np.concatenate(
         [y for x, y in test_dataset],
@@ -322,7 +360,9 @@ with mlflow.start_run():
     # Confusion Matrix
     # =====================================================
 
-    print("\n[INFO] Creating confusion matrix...")
+    print("\n======================================")
+    print("CREATING CONFUSION MATRIX")
+    print("======================================")
 
     cm = confusion_matrix(
         y_true,
@@ -354,7 +394,9 @@ with mlflow.start_run():
     # Classification Report
     # =====================================================
 
-    print("\n[INFO] Saving classification report...")
+    print("\n======================================")
+    print("CREATING CLASSIFICATION REPORT")
+    print("======================================")
 
     report = classification_report(
         y_true,
@@ -374,20 +416,8 @@ with mlflow.start_run():
     )
 
     # =====================================================
-    # Save Model Summary
+    # Save Model Summary Artifact
     # =====================================================
-
-    print("\n[INFO] Saving model summary...")
-
-    with open(
-        "artifacts/model_summary.txt",
-        "w"
-    ) as f:
-
-        model.summary(
-            print_fn=lambda x:
-            f.write(x + "\n")
-        )
 
     mlflow.log_artifact(
         "artifacts/model_summary.txt"
@@ -401,15 +431,13 @@ with mlflow.start_run():
     print("TRAINING COMPLETED SUCCESSFULLY")
     print("======================================")
 
-    print(f"Test Accuracy : {test_accuracy:.4f}")
-    print(f"Test Loss     : {test_loss:.4f}")
+    print("\nGenerated Artifacts:")
 
-    print("\nArtifacts saved in:")
-    print("artifacts/")
-
-    print("\nGenerated files:")
     print("- cnn_model.keras")
     print("- training_history.png")
     print("- confusion_matrix.png")
     print("- classification_report.txt")
     print("- model_summary.txt")
+
+    print("\nArtifacts Location:")
+    print("artifacts/")
