@@ -1,5 +1,3 @@
-# README.md
-
 # Intel Image Classification with MLflow CI/CD Pipeline
 
 ## Project Overview
@@ -58,40 +56,43 @@ Project ini bertujuan untuk:
 
 # Project Structure
 
+```text
 Workflow-CI/
 │
 ├── .github/
-│ └── workflows/
-│ └── ci.yml
+│   └── workflows/
+│       └── ci.yml
 │
 ├── MLProject/
-│ │
-│ ├── artifacts/
-│ │ ├── classification_report.txt
-│ │ ├── cnn_model.keras
-│ │ ├── confusion_matrix.png
-│ │ ├── model_summary.txt
-│ │ └── training_history.png
-│ │
-│ ├── intel_image_preprocessing/
-│ │ ├── train/
-│ │ ├── val/
-│ │ └── test/
-│ │
-│ ├── conda.yaml
-│ ├── Dockerfile
-│ ├── DagsHub.txt
-│ ├── MLproject
-│ ├── modelling.py
-│ └── requirements.txt
+│   │
+│   ├── artifacts/
+│   │   ├── classification_report.txt
+│   │   ├── cnn_model.keras
+│   │   ├── confusion_matrix.png
+│   │   ├── model_summary.txt
+│   │   └── training_history.png
+│   │
+│   ├── intel_image_preprocessing/
+│   │   ├── train/
+│   │   ├── val/
+│   │   └── test/
+│   │
+│   ├── conda.yaml
+│   ├── Dockerfile
+│   ├── DagsHub.txt
+│   ├── MLproject
+│   ├── modelling.py
+│   └── requirements.txt
 │
 ├── README.md
 └── .gitignore
+```
 
 ---
 
 # Dataset Flow
 
+```mermaid
 graph TD
 
 A[Raw Dataset] --> B[Data Loading]
@@ -117,11 +118,13 @@ H --> I
 I --> J[Dataset Optimization]
 
 J --> K[Preprocessed Dataset]
+```
 
 ---
 
 # CNN Architecture
 
+```mermaid
 graph TD
 
 A[Input Image 128x128x3]
@@ -143,11 +146,13 @@ G --> H[Dropout 0.3]
 H --> I[Dense Softmax 6 Classes]
 
 I --> J[Prediction Output]
+```
 
 ---
 
 # MLflow Training Flow
 
+```mermaid
 graph TD
 
 A[Load Dataset]
@@ -171,12 +176,13 @@ H --> I[Save Artifacts]
 I --> J[MLflow Tracking]
 
 J --> K[DagsHub Logging]
+```
 
 ---
 
 # CI/CD Workflow
 
-mermaid
+```mermaid
 graph TD
 
 A[Push to GitHub]
@@ -200,12 +206,13 @@ H --> I[Build Docker Image]
 I --> J[Push Docker Image]
 
 J --> K[Workflow Completed]
+```
 
 ---
 
 # Docker Workflow
 
-mermaid
+```mermaid
 graph TD
 
 A[Dockerfile]
@@ -219,6 +226,7 @@ C --> D[Copy MLProject Files]
 D --> E[Run modelling.py]
 
 E --> F[Containerized ML Pipeline]
+```
 
 ---
 
