@@ -30,11 +30,23 @@ from tensorflow.keras.utils import (
 # DagsHub MLflow Authentication
 # =========================================================
 
-os.environ["MLFLOW_TRACKING_USERNAME"] = "arif76440"
+dagshub_token = os.getenv("DAGSHUB_TOKEN")
 
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv(
-    "DAGSHUB_TOKEN"
-)
+if dagshub_token:
+
+    os.environ["MLFLOW_TRACKING_USERNAME"] = "arif76440"
+
+    os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+    mlflow.set_tracking_uri(
+        "https://dagshub.com/arif76440/MLFlow-Image-Classification.mlflow"
+    )
+
+    print("[INFO] DagsHub tracking enabled")
+
+else:
+
+    print("[WARNING] DAGSHUB_TOKEN not found")
 
 mlflow.set_tracking_uri(
     "https://dagshub.com/arif76440/MLFlow-Image-Classification.mlflow"
