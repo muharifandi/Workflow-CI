@@ -1,19 +1,20 @@
 import os
-import dagshub
 import mlflow
 import mlflow.tensorflow
+import dagshub
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import (
     confusion_matrix,
-    classification_report
+    classification_report,
+    ConfusionMatrixDisplay
 )
 
 from tensorflow.keras.models import Sequential
-
 from tensorflow.keras.layers import (
+    Input,
     Conv2D,
     MaxPooling2D,
     Flatten,
@@ -21,32 +22,32 @@ from tensorflow.keras.layers import (
     Dropout
 )
 
-from tensorflow.keras.utils import (
-    image_dataset_from_directory
-)
+from tensorflow.keras.utils import image_dataset_from_directory
+
 
 # =========================================================
-# DAGSHUB INITIALIZATION
+# DagsHub Configuration
 # =========================================================
+
+dagshub_token = os.getenv("DAGSHUB_TOKEN")
 
 dagshub.init(
     repo_owner="arif76440",
     repo_name="MLFlow-Image-Classification",
-    mlflow=True
+    mlflow=True,
+    token=dagshub_token
 )
 
 # =========================================================
-# MLFLOW CONFIGURATION
+# MLflow Configuration
 # =========================================================
 
-mlflow.set_experiment(
-    "Intel_Image_Classification"
-)
+mlflow.set_experiment("Intel_Image_Classification")
 
 mlflow.tensorflow.autolog()
 
 # =========================================================
-# CONFIGURATION
+# Dataset Configuration
 # =========================================================
 
 DATASET_DIR = "intel_image_preprocessing"
@@ -55,28 +56,11 @@ IMG_SIZE = (128, 128)
 
 BATCH_SIZE = 32
 
-EPOCHS = 1
+EPOCHS = 5
 
-CLASS_NAMES = [
-    "buildings",
-    "forest",
-    "glacier",
-    "mountain",
-    "sea",
-    "street"
-]
 
 # =========================================================
-# CREATE ARTIFACT DIRECTORY
-# =========================================================
-
-os.makedirs(
-    "artifacts",
-    exist_ok=True
-)
-
-# =========================================================
-# LOAD DATASET
+# Load Dataset
 # =========================================================
 
 print("\n[INFO] Loading dataset...")
@@ -84,15 +68,13 @@ print("\n[INFO] Loading dataset...")
 train_dataset = image_dataset_from_directory(
     f"{DATASET_DIR}/train",
     image_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    shuffle=True
+    batch_size=BATCH_SIZE
 )
 
 val_dataset = image_dataset_from_directory(
     f"{DATASET_DIR}/val",
     image_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    shuffle=False
+    batch_size=BATCH_SIZE
 )
 
 test_dataset = image_dataset_from_directory(
@@ -102,8 +84,10 @@ test_dataset = image_dataset_from_directory(
     shuffle=False
 )
 
+class_names = train_dataset.class_names
+
 # =========================================================
-# NORMALIZATION
+# Normalization
 # =========================================================
 
 normalization_layer = tf.keras.layers.Rescaling(1./255)
@@ -121,34 +105,26 @@ test_dataset = test_dataset.map(
 )
 
 # =========================================================
-# DATASET OPTIMIZATION
+# Optimize Dataset
 # =========================================================
 
 AUTOTUNE = tf.data.AUTOTUNE
 
-train_dataset = train_dataset.cache().prefetch(
-    buffer_size=AUTOTUNE
-)
+train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
 
-val_dataset = val_dataset.cache().prefetch(
-    buffer_size=AUTOTUNE
-)
+val_dataset = val_dataset.prefetch(buffer_size=AUTOTUNE)
 
-test_dataset = test_dataset.cache().prefetch(
-    buffer_size=AUTOTUNE
-)
+test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
 
 # =========================================================
-# BUILD CNN MODEL
+# Build CNN Model
 # =========================================================
 
 print("\n[INFO] Building CNN model...")
 
 model = Sequential([
 
-    tf.keras.Input(
-        shape=(128, 128, 3)
-    ),
+    Input(shape=(128, 128, 3)),
 
     Conv2D(
         32,
@@ -182,7 +158,7 @@ model = Sequential([
 ])
 
 # =========================================================
-# COMPILE MODEL
+# Compile Model
 # =========================================================
 
 model.compile(
@@ -192,183 +168,153 @@ model.compile(
 )
 
 # =========================================================
-# SAVE MODEL SUMMARY
+# Create Artifact Directory
 # =========================================================
 
-with open(
-    "artifacts/model_summary.txt",
-    "w"
-) as f:
+os.makedirs("artifacts", exist_ok=True)
 
-    model.summary(
-        print_fn=lambda x: f.write(x + "\n")
+# =========================================================
+# MLflow Run
+# =========================================================
+
+with mlflow.start_run():
+
+    print("\n[INFO] Training model...")
+
+    history = model.fit(
+        train_dataset,
+        validation_data=val_dataset,
+        epochs=EPOCHS
     )
 
-# =========================================================
-# TRAIN MODEL
-# =========================================================
+    # =====================================================
+    # Evaluate Model
+    # =====================================================
 
-print("\n[INFO] Training model...")
+    print("\n[INFO] Evaluating model...")
 
-history = model.fit(
-    train_dataset,
-    validation_data=val_dataset,
-    epochs=EPOCHS
-)
+    test_loss, test_accuracy = model.evaluate(test_dataset)
 
-# =========================================================
-# EVALUATION
-# =========================================================
+    # =====================================================
+    # Log Parameters
+    # =====================================================
 
-print("\n[INFO] Evaluating model...")
+    mlflow.log_param("img_size", IMG_SIZE)
 
-test_loss, test_accuracy = model.evaluate(
-    test_dataset
-)
+    mlflow.log_param("batch_size", BATCH_SIZE)
 
-# =========================================================
-# LOG METRICS
-# =========================================================
+    mlflow.log_param("epochs", EPOCHS)
 
-mlflow.log_metric(
-    "test_accuracy",
-    test_accuracy
-)
+    # =====================================================
+    # Log Metrics
+    # =====================================================
 
-mlflow.log_metric(
-    "test_loss",
-    test_loss
-)
+    mlflow.log_metric("test_accuracy", test_accuracy)
 
-# =========================================================
-# PREDICTION
-# =========================================================
+    mlflow.log_metric("test_loss", test_loss)
 
-y_true = np.concatenate([
-    y.numpy()
-    for x, y in test_dataset
-])
+    # =====================================================
+    # Save Model
+    # =====================================================
 
-y_pred_probs = model.predict(
-    test_dataset
-)
+    model.save("artifacts/cnn_model.keras")
 
-y_pred = np.argmax(
-    y_pred_probs,
-    axis=1
-)
+    mlflow.log_artifact("artifacts/cnn_model.keras")
 
-# =========================================================
-# CONFUSION MATRIX
-# =========================================================
+    # =====================================================
+    # Training History Plot
+    # =====================================================
 
-cm = confusion_matrix(
-    y_true,
-    y_pred
-)
+    plt.figure(figsize=(10, 5))
 
-plt.figure(figsize=(8, 6))
+    plt.plot(history.history["accuracy"])
 
-plt.imshow(
-    cm,
-    cmap="Blues"
-)
+    plt.plot(history.history["val_accuracy"])
 
-plt.title("Confusion Matrix")
+    plt.title("Model Accuracy")
 
-plt.colorbar()
+    plt.xlabel("Epoch")
 
-plt.xlabel("Predicted Label")
+    plt.ylabel("Accuracy")
 
-plt.ylabel("True Label")
+    plt.legend(["Train", "Validation"])
 
-plt.savefig(
-    "artifacts/confusion_matrix.png"
-)
+    plt.savefig("artifacts/training_history.png")
 
-plt.close()
+    plt.close()
 
-# =========================================================
-# CLASSIFICATION REPORT
-# =========================================================
+    mlflow.log_artifact("artifacts/training_history.png")
 
-report = classification_report(
-    y_true,
-    y_pred,
-    target_names=CLASS_NAMES
-)
+    # =====================================================
+    # Predictions
+    # =====================================================
 
-with open(
-    "artifacts/classification_report.txt",
-    "w"
-) as f:
+    y_true = np.concatenate(
+        [y for x, y in test_dataset],
+        axis=0
+    )
 
-    f.write(report)
+    y_pred_probs = model.predict(test_dataset)
 
-# =========================================================
-# TRAINING HISTORY
-# =========================================================
+    y_pred = np.argmax(y_pred_probs, axis=1)
 
-plt.figure(figsize=(10, 5))
+    # =====================================================
+    # Confusion Matrix
+    # =====================================================
 
-plt.plot(
-    history.history["accuracy"],
-    label="Train Accuracy"
-)
+    cm = confusion_matrix(y_true, y_pred)
 
-plt.plot(
-    history.history["val_accuracy"],
-    label="Validation Accuracy"
-)
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=class_names
+    )
 
-plt.title("Training History")
+    fig, ax = plt.subplots(figsize=(8, 8))
 
-plt.xlabel("Epoch")
+    disp.plot(ax=ax)
 
-plt.ylabel("Accuracy")
+    plt.savefig("artifacts/confusion_matrix.png")
 
-plt.legend()
+    plt.close()
 
-plt.savefig(
-    "artifacts/training_history.png"
-)
+    mlflow.log_artifact("artifacts/confusion_matrix.png")
 
-plt.close()
+    # =====================================================
+    # Classification Report
+    # =====================================================
 
-# =========================================================
-# SAVE MODEL
-# =========================================================
+    report = classification_report(
+        y_true,
+        y_pred,
+        target_names=class_names
+    )
 
-model.save(
-    "artifacts/cnn_model.keras"
-)
+    with open(
+        "artifacts/classification_report.txt",
+        "w"
+    ) as f:
 
-# =========================================================
-# LOG ARTIFACTS
-# =========================================================
+        f.write(report)
 
-mlflow.log_artifact(
-    "artifacts/model_summary.txt"
-)
+    mlflow.log_artifact(
+        "artifacts/classification_report.txt"
+    )
 
-mlflow.log_artifact(
-    "artifacts/classification_report.txt"
-)
+    # =====================================================
+    # Model Summary
+    # =====================================================
 
-mlflow.log_artifact(
-    "artifacts/confusion_matrix.png"
-)
+    with open(
+        "artifacts/model_summary.txt",
+        "w"
+    ) as f:
 
-mlflow.log_artifact(
-    "artifacts/training_history.png"
-)
+        model.summary(
+            print_fn=lambda x: f.write(x + "\n")
+        )
 
-mlflow.log_artifact(
-    "artifacts/cnn_model.keras"
-)
+    mlflow.log_artifact(
+        "artifacts/model_summary.txt"
+    )
 
-print("\n[INFO] Training completed successfully!")
-
-print(f"\nTest Accuracy: {test_accuracy:.4f}")
-
-print(f"Test Loss: {test_loss:.4f}")
+    print("\n[INFO] Training completed successfully!")
