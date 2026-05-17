@@ -1,7 +1,6 @@
 import os
 import mlflow
 import mlflow.tensorflow
-import dagshub
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +12,7 @@ from sklearn.metrics import (
 )
 
 from tensorflow.keras.models import Sequential
+
 from tensorflow.keras.layers import (
     Input,
     Conv2D,
@@ -22,24 +22,31 @@ from tensorflow.keras.layers import (
     Dropout
 )
 
-from tensorflow.keras.utils import image_dataset_from_directory
-
-
-# =========================================================
-# DagsHub Configuration
-# =========================================================
-
-dagshub.init(
-    repo_owner="arif76440",
-    repo_name="MLFlow-Image-Classification",
-    mlflow=True
+from tensorflow.keras.utils import (
+    image_dataset_from_directory
 )
 
 # =========================================================
-# MLflow Configuration
+# DagsHub MLflow Authentication
 # =========================================================
 
-mlflow.set_experiment("Intel_Image_Classification")
+os.environ["MLFLOW_TRACKING_USERNAME"] = "arif76440"
+
+os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv(
+    "DAGSHUB_TOKEN"
+)
+
+mlflow.set_tracking_uri(
+    "https://dagshub.com/arif76440/MLFlow-Image-Classification.mlflow"
+)
+
+# =========================================================
+# MLflow Experiment
+# =========================================================
+
+mlflow.set_experiment(
+    "Intel_Image_Classification"
+)
 
 mlflow.tensorflow.autolog()
 
@@ -54,7 +61,6 @@ IMG_SIZE = (128, 128)
 BATCH_SIZE = 32
 
 EPOCHS = 5
-
 
 # =========================================================
 # Load Dataset
@@ -84,21 +90,32 @@ test_dataset = image_dataset_from_directory(
 class_names = train_dataset.class_names
 
 # =========================================================
-# Normalization
+# Normalize Dataset
 # =========================================================
 
-normalization_layer = tf.keras.layers.Rescaling(1./255)
+normalization_layer = tf.keras.layers.Rescaling(
+    1./255
+)
 
 train_dataset = train_dataset.map(
-    lambda x, y: (normalization_layer(x), y)
+    lambda x, y: (
+        normalization_layer(x),
+        y
+    )
 )
 
 val_dataset = val_dataset.map(
-    lambda x, y: (normalization_layer(x), y)
+    lambda x, y: (
+        normalization_layer(x),
+        y
+    )
 )
 
 test_dataset = test_dataset.map(
-    lambda x, y: (normalization_layer(x), y)
+    lambda x, y: (
+        normalization_layer(x),
+        y
+    )
 )
 
 # =========================================================
@@ -107,11 +124,17 @@ test_dataset = test_dataset.map(
 
 AUTOTUNE = tf.data.AUTOTUNE
 
-train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
+train_dataset = train_dataset.prefetch(
+    buffer_size=AUTOTUNE
+)
 
-val_dataset = val_dataset.prefetch(buffer_size=AUTOTUNE)
+val_dataset = val_dataset.prefetch(
+    buffer_size=AUTOTUNE
+)
 
-test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
+test_dataset = test_dataset.prefetch(
+    buffer_size=AUTOTUNE
+)
 
 # =========================================================
 # Build CNN Model
@@ -168,13 +191,20 @@ model.compile(
 # Create Artifact Directory
 # =========================================================
 
-os.makedirs("artifacts", exist_ok=True)
+os.makedirs(
+    "artifacts",
+    exist_ok=True
+)
 
 # =========================================================
-# MLflow Run
+# Start MLflow Run
 # =========================================================
 
 with mlflow.start_run():
+
+    # =====================================================
+    # Training
+    # =====================================================
 
     print("\n[INFO] Training model...")
 
@@ -185,65 +215,103 @@ with mlflow.start_run():
     )
 
     # =====================================================
-    # Evaluate Model
+    # Evaluation
     # =====================================================
 
     print("\n[INFO] Evaluating model...")
 
-    test_loss, test_accuracy = model.evaluate(test_dataset)
+    test_loss, test_accuracy = model.evaluate(
+        test_dataset
+    )
 
     # =====================================================
     # Log Parameters
     # =====================================================
 
-    mlflow.log_param("img_size", IMG_SIZE)
+    mlflow.log_param(
+        "img_size",
+        IMG_SIZE
+    )
 
-    mlflow.log_param("batch_size", BATCH_SIZE)
+    mlflow.log_param(
+        "batch_size",
+        BATCH_SIZE
+    )
 
-    mlflow.log_param("epochs", EPOCHS)
+    mlflow.log_param(
+        "epochs",
+        EPOCHS
+    )
 
     # =====================================================
     # Log Metrics
     # =====================================================
 
-    mlflow.log_metric("test_accuracy", test_accuracy)
+    mlflow.log_metric(
+        "test_accuracy",
+        test_accuracy
+    )
 
-    mlflow.log_metric("test_loss", test_loss)
+    mlflow.log_metric(
+        "test_loss",
+        test_loss
+    )
 
     # =====================================================
     # Save Model
     # =====================================================
 
-    model.save("artifacts/cnn_model.keras")
+    model.save(
+        "artifacts/cnn_model.keras"
+    )
 
-    mlflow.log_artifact("artifacts/cnn_model.keras")
+    mlflow.log_artifact(
+        "artifacts/cnn_model.keras"
+    )
 
     # =====================================================
-    # Training History Plot
+    # Training History Visualization
     # =====================================================
 
     plt.figure(figsize=(10, 5))
 
-    plt.plot(history.history["accuracy"])
+    plt.plot(
+        history.history["accuracy"]
+    )
 
-    plt.plot(history.history["val_accuracy"])
+    plt.plot(
+        history.history["val_accuracy"]
+    )
 
-    plt.title("Model Accuracy")
+    plt.title(
+        "Model Accuracy"
+    )
 
-    plt.xlabel("Epoch")
+    plt.xlabel(
+        "Epoch"
+    )
 
-    plt.ylabel("Accuracy")
+    plt.ylabel(
+        "Accuracy"
+    )
 
-    plt.legend(["Train", "Validation"])
+    plt.legend([
+        "Train",
+        "Validation"
+    ])
 
-    plt.savefig("artifacts/training_history.png")
+    plt.savefig(
+        "artifacts/training_history.png"
+    )
 
     plt.close()
 
-    mlflow.log_artifact("artifacts/training_history.png")
+    mlflow.log_artifact(
+        "artifacts/training_history.png"
+    )
 
     # =====================================================
-    # Predictions
+    # Prediction
     # =====================================================
 
     y_true = np.concatenate(
@@ -251,30 +319,44 @@ with mlflow.start_run():
         axis=0
     )
 
-    y_pred_probs = model.predict(test_dataset)
+    y_pred_probs = model.predict(
+        test_dataset
+    )
 
-    y_pred = np.argmax(y_pred_probs, axis=1)
+    y_pred = np.argmax(
+        y_pred_probs,
+        axis=1
+    )
 
     # =====================================================
     # Confusion Matrix
     # =====================================================
 
-    cm = confusion_matrix(y_true, y_pred)
+    cm = confusion_matrix(
+        y_true,
+        y_pred
+    )
 
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm,
         display_labels=class_names
     )
 
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(
+        figsize=(8, 8)
+    )
 
     disp.plot(ax=ax)
 
-    plt.savefig("artifacts/confusion_matrix.png")
+    plt.savefig(
+        "artifacts/confusion_matrix.png"
+    )
 
     plt.close()
 
-    mlflow.log_artifact("artifacts/confusion_matrix.png")
+    mlflow.log_artifact(
+        "artifacts/confusion_matrix.png"
+    )
 
     # =====================================================
     # Classification Report
@@ -307,11 +389,14 @@ with mlflow.start_run():
     ) as f:
 
         model.summary(
-            print_fn=lambda x: f.write(x + "\n")
+            print_fn=lambda x:
+            f.write(x + "\n")
         )
 
     mlflow.log_artifact(
         "artifacts/model_summary.txt"
     )
 
-    print("\n[INFO] Training completed successfully!")
+    print(
+        "\n[INFO] Training completed successfully!"
+    )
