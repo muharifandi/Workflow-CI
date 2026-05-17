@@ -1,0 +1,15 @@
+__pycache__/
+
+*.pyc
+
+mlflow.db
+
+condaenv.*
+
+.DS_Store
+
+mlruns/
+
+venv/
+
+.env
