@@ -1,6 +1,5 @@
 # README.md
 
-````markdown
 # Intel Image Classification with MLflow CI/CD Pipeline
 
 ## Project Overview
@@ -59,7 +58,7 @@ Project ini bertujuan untuk:
 
 # Project Structure
 
-```text
+````text
 Workflow-CI/
 │
 ├── .github/
@@ -89,8 +88,7 @@ Workflow-CI/
 │
 ├── README.md
 └── .gitignore
-```
-````
+
 
 ---
 
@@ -122,7 +120,7 @@ H --> I
 I --> J[Dataset Optimization]
 
 J --> K[Preprocessed Dataset]
-```
+````
 
 ---
 
@@ -399,7 +397,3 @@ Muh Arifandi
 # License
 
 This project is developed for educational purposes.
-
-```
-
-```
