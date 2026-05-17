@@ -29,13 +29,10 @@ from tensorflow.keras.utils import image_dataset_from_directory
 # DagsHub Configuration
 # =========================================================
 
-dagshub_token = os.getenv("DAGSHUB_TOKEN")
-
 dagshub.init(
     repo_owner="arif76440",
     repo_name="MLFlow-Image-Classification",
-    mlflow=True,
-    token=dagshub_token
+    mlflow=True
 )
 
 # =========================================================
