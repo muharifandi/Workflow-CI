@@ -67,7 +67,7 @@ jobs:
 
           python -m pip install --upgrade pip
 
-          pip install -r Membangun_model/requirements.txt
+          pip install -r MLProject/requirements.txt
 
           pip install mlflow
 
@@ -94,7 +94,7 @@ jobs:
         with:
           name: model-artifacts
 
-          path: Membangun_model/artifacts/
+          path: MLProject/artifacts/
 
       # ===================================================
       # Build Docker Image
@@ -104,7 +104,7 @@ jobs:
 
         run: |
 
-          cd Membangun_model
+          cd MLProject
 
           docker build -t intel-image-classification .
 
