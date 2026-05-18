@@ -38,9 +38,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 print("[INFO] Using local MLflow tracking")
 
-mlflow.set_experiment(
-    "Intel_Image_Classification"
-)
+# experiment managed by mlflow run
 
 # Automatic logging
 mlflow.tensorflow.autolog()
@@ -228,216 +226,216 @@ model.compile(
 # Start MLflow Run
 # =========================================================
 
-with mlflow.start_run(nested=True):
+# MLflow run is managed by mlflow run command
 
-    # =====================================================
-    # Training Model
-    # =====================================================
+# =====================================================
+# Training Model
+# =====================================================
 
-    print("\n======================================")
-    print("TRAINING MODEL")
-    print("======================================")
+print("\n======================================")
+print("TRAINING MODEL")
+print("======================================")
 
-    history = model.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=EPOCHS
-    )
+history = model.fit(
+    train_dataset,
+    validation_data=val_dataset,
+    epochs=EPOCHS
+)
 
-    # =====================================================
-    # Evaluate Model
-    # =====================================================
+# =====================================================
+# Evaluate Model
+# =====================================================
 
-    print("\n======================================")
-    print("EVALUATING MODEL")
-    print("======================================")
+print("\n======================================")
+print("EVALUATING MODEL")
+print("======================================")
 
-    test_loss, test_accuracy = model.evaluate(
-        test_dataset
-    )
+test_loss, test_accuracy = model.evaluate(
+    test_dataset
+)
 
-    print(f"\nTest Accuracy : {test_accuracy:.4f}")
-    print(f"Test Loss     : {test_loss:.4f}")
+print(f"\nTest Accuracy : {test_accuracy:.4f}")
+print(f"Test Loss     : {test_loss:.4f}")
 
-    # =====================================================
-    # Additional Metrics
-    # =====================================================
+# =====================================================
+# Additional Metrics
+# =====================================================
 
-    mlflow.log_metric(
-        "final_test_accuracy",
-        test_accuracy
-    )
+mlflow.log_metric(
+    "final_test_accuracy",
+    test_accuracy
+)
 
-    mlflow.log_metric(
-        "final_test_loss",
-        test_loss
-    )
+mlflow.log_metric(
+    "final_test_loss",
+    test_loss
+)
 
-    # =====================================================
-    # Save Model
-    # =====================================================
+# =====================================================
+# Save Model
+# =====================================================
 
-    print("\n======================================")
-    print("SAVING MODEL")
-    print("======================================")
+print("\n======================================")
+print("SAVING MODEL")
+print("======================================")
 
-    model.save(
-        "artifacts/cnn_model.keras"
-    )
+model.save(
+    "artifacts/cnn_model.keras"
+)
 
-    mlflow.log_artifact(
-        "artifacts/cnn_model.keras"
-    )
+mlflow.log_artifact(
+    "artifacts/cnn_model.keras"
+)
 
-    # =====================================================
-    # Training Visualization
-    # =====================================================
+# =====================================================
+# Training Visualization
+# =====================================================
 
-    print("\n======================================")
-    print("CREATING TRAINING VISUALIZATION")
-    print("======================================")
+print("\n======================================")
+print("CREATING TRAINING VISUALIZATION")
+print("======================================")
 
-    plt.figure(figsize=(10, 5))
+plt.figure(figsize=(10, 5))
 
-    plt.plot(
-        history.history["accuracy"]
-    )
+plt.plot(
+    history.history["accuracy"]
+)
 
-    plt.plot(
-        history.history["val_accuracy"]
-    )
+plt.plot(
+    history.history["val_accuracy"]
+)
 
-    plt.title(
-        "Training and Validation Accuracy"
-    )
+plt.title(
+    "Training and Validation Accuracy"
+)
 
-    plt.xlabel(
-        "Epoch"
-    )
+plt.xlabel(
+    "Epoch"
+)
 
-    plt.ylabel(
-        "Accuracy"
-    )
+plt.ylabel(
+    "Accuracy"
+)
 
-    plt.legend([
-        "Training Accuracy",
-        "Validation Accuracy"
-    ])
+plt.legend([
+    "Training Accuracy",
+    "Validation Accuracy"
+])
 
-    plt.savefig(
-        "artifacts/training_history.png"
-    )
+plt.savefig(
+    "artifacts/training_history.png"
+)
 
-    plt.close()
+plt.close()
 
-    mlflow.log_artifact(
-        "artifacts/training_history.png"
-    )
+mlflow.log_artifact(
+    "artifacts/training_history.png"
+)
 
-    # =====================================================
-    # Prediction
-    # =====================================================
+# =====================================================
+# Prediction
+# =====================================================
 
-    print("\n======================================")
-    print("GENERATING PREDICTIONS")
-    print("======================================")
+print("\n======================================")
+print("GENERATING PREDICTIONS")
+print("======================================")
 
-    y_true = np.concatenate(
-        [y for x, y in test_dataset],
-        axis=0
-    )
+y_true = np.concatenate(
+    [y for x, y in test_dataset],
+    axis=0
+)
 
-    y_pred_probs = model.predict(
-        test_dataset
-    )
+y_pred_probs = model.predict(
+    test_dataset
+)
 
-    y_pred = np.argmax(
-        y_pred_probs,
-        axis=1
-    )
+y_pred = np.argmax(
+    y_pred_probs,
+    axis=1
+)
 
-    # =====================================================
-    # Confusion Matrix
-    # =====================================================
+# =====================================================
+# Confusion Matrix
+# =====================================================
 
-    print("\n======================================")
-    print("CREATING CONFUSION MATRIX")
-    print("======================================")
+print("\n======================================")
+print("CREATING CONFUSION MATRIX")
+print("======================================")
 
-    cm = confusion_matrix(
-        y_true,
-        y_pred
-    )
+cm = confusion_matrix(
+    y_true,
+    y_pred
+)
 
-    disp = ConfusionMatrixDisplay(
-        confusion_matrix=cm,
-        display_labels=class_names
-    )
+disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=class_names
+)
 
-    fig, ax = plt.subplots(
-        figsize=(8, 8)
-    )
+fig, ax = plt.subplots(
+    figsize=(8, 8)
+)
 
-    disp.plot(ax=ax)
+disp.plot(ax=ax)
 
-    plt.savefig(
-        "artifacts/confusion_matrix.png"
-    )
+plt.savefig(
+    "artifacts/confusion_matrix.png"
+)
 
-    plt.close()
+plt.close()
 
-    mlflow.log_artifact(
-        "artifacts/confusion_matrix.png"
-    )
+mlflow.log_artifact(
+    "artifacts/confusion_matrix.png"
+)
 
-    # =====================================================
-    # Classification Report
-    # =====================================================
+# =====================================================
+# Classification Report
+# =====================================================
 
-    print("\n======================================")
-    print("CREATING CLASSIFICATION REPORT")
-    print("======================================")
+print("\n======================================")
+print("CREATING CLASSIFICATION REPORT")
+print("======================================")
 
-    report = classification_report(
-        y_true,
-        y_pred,
-        target_names=class_names
-    )
+report = classification_report(
+    y_true,
+    y_pred,
+    target_names=class_names
+)
 
-    with open(
-        "artifacts/classification_report.txt",
-        "w"
-    ) as f:
+with open(
+    "artifacts/classification_report.txt",
+    "w"
+) as f:
 
-        f.write(report)
+    f.write(report)
 
-    mlflow.log_artifact(
-        "artifacts/classification_report.txt"
-    )
+mlflow.log_artifact(
+    "artifacts/classification_report.txt"
+)
 
-    # =====================================================
-    # Save Model Summary Artifact
-    # =====================================================
+# =====================================================
+# Save Model Summary Artifact
+# =====================================================
 
-    mlflow.log_artifact(
-        "artifacts/model_summary.txt"
-    )
+mlflow.log_artifact(
+    "artifacts/model_summary.txt"
+)
 
-    # =====================================================
-    # Final Output
-    # =====================================================
+# =====================================================
+# Final Output
+# =====================================================
 
-    print("\n======================================")
-    print("TRAINING COMPLETED SUCCESSFULLY")
-    print("======================================")
+print("\n======================================")
+print("TRAINING COMPLETED SUCCESSFULLY")
+print("======================================")
 
-    print("\nGenerated Artifacts:")
+print("\nGenerated Artifacts:")
 
-    print("- cnn_model.keras")
-    print("- training_history.png")
-    print("- confusion_matrix.png")
-    print("- classification_report.txt")
-    print("- model_summary.txt")
+print("- cnn_model.keras")
+print("- training_history.png")
+print("- confusion_matrix.png")
+print("- classification_report.txt")
+print("- model_summary.txt")
 
-    print("\nArtifacts Location:")
-    print("artifacts/")
+print("\nArtifacts Location:")
+print("artifacts/")

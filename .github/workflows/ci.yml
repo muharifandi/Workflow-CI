@@ -77,12 +77,16 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # ===================================================
-      # Build & Push Docker Image with MLflow
+      # Build Docker Image with MLflow
       # ===================================================
       - name: Build Docker Image with MLflow
         run: |
+          cd MLProject
+          RUN_ID=$(ls mlruns/1/ 2>/dev/null | grep -v "meta.yaml" | head -1 || \
+                   ls mlruns/0/ 2>/dev/null | grep -v "meta.yaml" | head -1)
+          echo "Run ID: $RUN_ID"
           mlflow models build-docker \
-            --model-uri "MLProject/artifacts/cnn_model.keras" \
+            --model-uri "runs:/$RUN_ID/model" \
             --name "${{ secrets.DOCKER_USERNAME }}/intel-image-classification"
 
       # ===================================================
