@@ -1,4 +1,4 @@
-name: Intel_Image_Classification
+name: intel-image-classification
 
 python_env: python_env.yaml
 

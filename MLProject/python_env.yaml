@@ -1,13 +1,7 @@
 python: "3.10"
 
 build_dependencies:
-  - pip
+  pip: latest
 
 dependencies:
-  - tensorflow
-  - mlflow
-  - dagshub
-  - numpy
-  - matplotlib
-  - scikit-learn
-  - pillow
+  - -r requirements.txt
