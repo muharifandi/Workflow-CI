@@ -19,6 +19,14 @@ jobs:
 
     steps:
       # ===================================================
+      # Set up job
+      # ===================================================
+
+      - name: Set up job
+
+        run: echo "Starting CI Pipeline"
+
+      # ===================================================
       # Checkout Repository
       # ===================================================
 
@@ -36,6 +44,18 @@ jobs:
 
         with:
           python-version: "3.10"
+
+      # ===================================================
+      # Check Environment
+      # ===================================================
+
+      - name: Check Environment
+
+        run: |
+
+          python --version
+
+          pip --version
 
       # ===================================================
       # Install Dependencies
@@ -100,6 +120,17 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # ===================================================
+      # Tag Docker Image
+      # ===================================================
+
+      - name: Tag Docker Image
+
+        run: |
+
+          docker tag intel-image-classification \
+          ${{ secrets.DOCKER_USERNAME }}/intel-image-classification:latest
+
+      # ===================================================
       # Push Docker Image
       # ===================================================
 
@@ -107,6 +138,13 @@ jobs:
 
         run: |
 
-          docker tag intel-image-classification ${{ secrets.DOCKER_USERNAME }}/intel-image-classification:latest
+          docker push \
+          ${{ secrets.DOCKER_USERNAME }}/intel-image-classification:latest
 
-          docker push ${{ secrets.DOCKER_USERNAME }}/intel-image-classification:latest
+      # ===================================================
+      # Complete Job
+      # ===================================================
+
+      - name: Complete Job
+
+        run: echo "CI Pipeline Completed Successfully"
