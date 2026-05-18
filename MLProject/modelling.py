@@ -288,6 +288,21 @@ mlflow.log_artifact(
 )
 
 # =====================================================
+# Log Model to MLflow
+# =====================================================
+
+mlflow.tensorflow.log_model(
+    model,
+    artifact_path="model"
+)
+
+# Save Run ID to file for Docker build step
+run_id = mlflow.active_run().info.run_id
+with open("run_id.txt", "w") as f:
+    f.write(run_id)
+print(f"\nRun ID saved: {run_id}")
+
+# =====================================================
 # Training Visualization
 # =====================================================
 
