@@ -23,7 +23,6 @@ jobs:
       # ===================================================
 
       - name: Set up job
-
         run: echo "Starting CI Pipeline"
 
       # ===================================================
@@ -31,7 +30,6 @@ jobs:
       # ===================================================
 
       - name: Checkout Repository
-
         uses: actions/checkout@v4
 
       # ===================================================
@@ -39,7 +37,6 @@ jobs:
       # ===================================================
 
       - name: Setup Python
-
         uses: actions/setup-python@v5
 
         with:
@@ -67,9 +64,9 @@ jobs:
 
           python -m pip install --upgrade pip
 
-          pip install -r MLProject/requirements.txt
-
           pip install mlflow
+
+          pip install -r MLProject/requirements.txt
 
       # ===================================================
       # Run MLflow Project
