@@ -6,11 +6,5 @@ channels:
 dependencies:
   - python=3.10
   - pip
-
   - pip:
-      - tensorflow
-      - mlflow
-      - numpy
-      - matplotlib
-      - scikit-learn
-      - pillow
+      - -r requirements.txt
