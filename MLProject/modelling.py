@@ -228,7 +228,7 @@ model.compile(
 # Start MLflow Run
 # =========================================================
 
-with mlflow.start_run():
+with mlflow.start_run(nested=True):
 
     # =====================================================
     # Training Model
