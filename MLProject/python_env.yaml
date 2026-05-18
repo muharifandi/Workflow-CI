@@ -1,7 +1,9 @@
 python: "3.10"
 
 build_dependencies:
-  pip: latest
+  - pip
+  - setuptools
+  - wheel
 
 dependencies:
   - -r requirements.txt
